@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
@@ -32,20 +32,13 @@ public class Labyrinth : MonoBehaviour
             return base.GetHashCode();
         }
     }
-    private enum Direction { UP, DOWN, RIGHT, LEFT };
+    private enum Direction { FRONT, BACK, RIGHT, LEFT };
 
+    [SerializeField] private string seed = "";
 
-    private bool hasGenerated = false;
-    [HideInInspector]public bool HasGenerated
-    {
-        get { return hasGenerated; }
-    }
-
-    public string seed = "";
-
-    public bool combineMeshes = true;
-    public bool activateNavMeshForSurface = false;//For Using Unity NavMesh
-    
+    [SerializeField] private bool combineMeshes = true;
+    [SerializeField] private bool activateNavMeshForSurface = false;//For Using Unity NavMesh
+    [SerializeField] private bool showSolution = false;
 
     public Material wallMaterial;
     public Material surfaceMaterial;
@@ -81,7 +74,6 @@ public class Labyrinth : MonoBehaviour
     public void Generate()//Awake
     {
         Random.InitState(seed.GetHashCode());
-        hasGenerated = true;
 
         Func func = () => { GenerateMaze(); GetSolution(false); };//You can delete "GetSolution()" if you want.
         TranslateMethodsToLabyrinthOrigin(func);
@@ -92,13 +84,14 @@ public class Labyrinth : MonoBehaviour
             NavMeshSurface nav = surface.gameObject.AddComponent<NavMeshSurface>();
             nav.BuildNavMesh();
         }
+
+        if (showSolution) 
+            GetSolution(true);
     }
 
     //Script checks components. You don't need to clear again.
     public void Clear()
     {
-        hasGenerated = false;
-
         Transform childs = gameObject.transform; 
         while(childs.childCount > 0)
             DestroyImmediate(childs.GetChild(childs.childCount - 1).gameObject);
@@ -169,7 +162,7 @@ public class Labyrinth : MonoBehaviour
                 return null;
 
 
-            avaliableDirections = new List<Direction> { Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT };
+            avaliableDirections = new List<Direction> { Direction.FRONT, Direction.BACK, Direction.RIGHT, Direction.LEFT };
 
             if (currentCell.x < 1 || closedCells.Contains(cells[currentCell.x - 1, currentCell.y]))
                 avaliableDirections.Remove(Direction.LEFT);
@@ -178,10 +171,10 @@ public class Labyrinth : MonoBehaviour
                 avaliableDirections.Remove(Direction.RIGHT);
 
             if (currentCell.y > columns - 2 || closedCells.Contains(cells[currentCell.x, currentCell.y + 1]))
-                avaliableDirections.Remove(Direction.UP);
+                avaliableDirections.Remove(Direction.FRONT);
 
             if (currentCell.y < 1 || closedCells.Contains(cells[currentCell.x, currentCell.y - 1]))
-                avaliableDirections.Remove(Direction.DOWN);
+                avaliableDirections.Remove(Direction.BACK);
 
             if (avaliableDirections.Count == 0)
             {
@@ -211,13 +204,13 @@ public class Labyrinth : MonoBehaviour
                 walls.Remove(new Cell(currentCell.childCells.Peek().x * 2 + 1, currentCell.childCells.Peek().y * 2 + 1));
                 break;
 
-            case Direction.UP://Up
+            case Direction.FRONT://Up
                 currentCell.childCells.Push(cells[currentCell.x, currentCell.y + 1]);
                 walls.Remove(new Cell(currentCell.x * 2 + 1, currentCell.y * 2 + 2));
                 walls.Remove(new Cell(currentCell.childCells.Peek().x * 2 + 1, currentCell.childCells.Peek().y * 2 + 1));
                 break;
 
-            case Direction.DOWN://Down
+            case Direction.BACK://Down
                 currentCell.childCells.Push(cells[currentCell.x, currentCell.y - 1]);
                 walls.Remove(new Cell(currentCell.x * 2 + 1, currentCell.y * 2 - 1 + 1));
                 walls.Remove(new Cell(currentCell.childCells.Peek().x * 2 + 1, currentCell.childCells.Peek().y * 2 + 1));
@@ -348,8 +341,7 @@ public class Labyrinth : MonoBehaviour
             parent.parent = this.transform;
         }
 
-
-        if (solutionArray != null)
+        void Show_Solution()
         {
             if (showSolution)
             {
@@ -372,6 +364,11 @@ public class Labyrinth : MonoBehaviour
 
                 sphere.GetComponent<MeshRenderer>().sharedMaterial.color = Color.red;
             }
+        }
+
+        if (solutionArray != null)
+        {
+            Show_Solution();
 
             return solutionArray;
         }
@@ -428,27 +425,7 @@ public class Labyrinth : MonoBehaviour
             solutionArray[solutionArray.Length - i++] = cc;
 
 
-            if (showSolution)
-            {
-                GameObject sphere = null;
-
-
-                foreach (Cell s in solutionArray)
-                {
-
-
-                    sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-
-                    sphere.transform.parent = parent;
-                    sphere.transform.localScale = 0.6f * this.transform.localScale;
-                    sphere.transform.localPosition = ToLabyrinthSpace(s, sphere.transform.localScale.y);
-
-                    sphere.GetComponent<Collider>().isTrigger = true;
-
-                }
-
-                sphere.GetComponent<MeshRenderer>().sharedMaterial.color = Color.red;
-            }
+            Show_Solution();
         }
 
         //CombineMeshes(parent.gameObject);
