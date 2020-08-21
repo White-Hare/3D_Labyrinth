@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
@@ -364,7 +364,7 @@ public class Labyrinth : MonoBehaviour
 
                     sphere.transform.parent = parent;
                     sphere.transform.localScale = 0.6f * this.transform.localScale;
-                    sphere.transform.localPosition = ToLabyrinthSpace(s, sphere.transform.localScale.y / 2f);
+                    sphere.transform.localPosition = ToLabyrinthSpace(s, sphere.transform.localScale.y);
 
                     sphere.GetComponent<Collider>().isTrigger = true;
 
@@ -430,14 +430,24 @@ public class Labyrinth : MonoBehaviour
 
             if (showSolution)
             {
-                GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.GetComponent<MeshRenderer>().material.color = Color.red;
+                GameObject sphere = null;
 
-                sphere.transform.parent = parent;
-                sphere.transform.localPosition = new Vector3((cc.x - rows / 2) * 2 + (rows + 1) % 2, sphere.transform.localScale.y / 2, (cc.y - columns / 2) * 2 + (columns + 1) % 2);
-                sphere.transform.localScale *= 0.6f;
 
-                sphere.GetComponent<Collider>().isTrigger = true;
+                foreach (Cell s in solutionArray)
+                {
+
+
+                    sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+
+                    sphere.transform.parent = parent;
+                    sphere.transform.localScale = 0.6f * this.transform.localScale;
+                    sphere.transform.localPosition = ToLabyrinthSpace(s, sphere.transform.localScale.y);
+
+                    sphere.GetComponent<Collider>().isTrigger = true;
+
+                }
+
+                sphere.GetComponent<MeshRenderer>().sharedMaterial.color = Color.red;
             }
         }
 
