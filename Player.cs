@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] private Labyrinth labyrinth;
+    [SerializeField] private Labyrinth2D _labyrinth2D;
     public float speed = 10f;
 
-    private Labyrinth.Cell[] solution;
+    private Labyrinth2D.Cell[] solution;
     private Vector3 currentTarget;
     private int currentTargetsIndex;
     private bool reverseMovement = false;
@@ -16,17 +16,17 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
-        Transform lt = labyrinth.transform;
+        Transform lt = _labyrinth2D.transform;
 
-        transform.position = labyrinth.ToLabyrinthSpace(labyrinth.beginCell, transform.localScale.y);
+        transform.position = _labyrinth2D.ToLabyrinthSpace(_labyrinth2D.beginCell, transform.localScale.y);
         this.transform.rotation = lt.rotation;
         this.transform.localScale *= lt.localScale.x * 0.7f;
 
 
-        Labyrinth.Func func = () => { solution = labyrinth.GetSolution(false);};
-        labyrinth.TranslateMethodsToLabyrinthOrigin(func);
+        Labyrinth2D.Func func = () => { solution = _labyrinth2D.GetSolution(false);};
+        _labyrinth2D.TranslateMethodsToLabyrinthOrigin(func);
 
-        currentTarget = labyrinth.ToLabyrinthSpace(solution[0], transform.localScale.y);
+        currentTarget = _labyrinth2D.ToLabyrinthSpace(solution[0], transform.localScale.y);
         currentTargetsIndex = -1;
     }
 
@@ -36,10 +36,10 @@ public class Player : MonoBehaviour
             if ((currentTargetsIndex < solution.Length - 1 && !reverseMovement) || (currentTargetsIndex > 0 && reverseMovement))
             {
                 if(!reverseMovement)
-                    currentTarget = labyrinth.ToLabyrinthSpace(solution[++currentTargetsIndex], transform.localScale.y);
+                    currentTarget = _labyrinth2D.ToLabyrinthSpace(solution[++currentTargetsIndex], transform.localScale.y);
 
                 else
-                    currentTarget = labyrinth.ToLabyrinthSpace(solution[--currentTargetsIndex], transform.localScale.y);
+                    currentTarget = _labyrinth2D.ToLabyrinthSpace(solution[--currentTargetsIndex], transform.localScale.y);
 
             }
             else
