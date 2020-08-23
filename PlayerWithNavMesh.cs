@@ -28,7 +28,7 @@ public class PlayerWithNavMesh : MonoBehaviour
         catch (Exception e)
         {
             Debug.LogError("Labyrinth size too small for \"Player\".");
-            throw new Exception("Labyrinth size too small for \"Player\".");
+            throw new Exception(e.Message);
         }
     }
 

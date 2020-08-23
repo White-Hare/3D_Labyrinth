@@ -1,8 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
+using Debug = UnityEngine.Debug;
+using Random = UnityEngine.Random;
 
 
 public class Labyrinth2D : MonoBehaviour
@@ -49,19 +55,21 @@ public class Labyrinth2D : MonoBehaviour
             return c;
         }
     }
-    protected enum Direction { FRONT, BACK, RIGHT, LEFT, UP, DOWN};
-
+    protected enum Direction { FORWARD, BACK, RIGHT, LEFT, UP, DOWN};
 
     [SerializeField] private string seed = "";
-
-    [SerializeField] protected bool combineMeshes = true;
-    [SerializeField] private bool activateNavMeshForSurface = false;//For Using Unity NavMesh
-    [SerializeField] private bool showSolution = false;
 
     public Material wallMaterial;
     public Material surfaceMaterial;
 
-    [Range(2, 50)] public int columns = 10, rows = 10;
+    [Range(2, 70)] public int columns = 10, rows = 10;
+
+    [SerializeField] private bool activateNavMeshForSurface = false;//For Using Unity NavMesh
+    [SerializeField] private bool showSolution = false;
+    [SerializeField] protected bool combineMeshes = true;
+
+    public bool mergeCubes = true;
+    [HideInInspector] public int mergeAmount = 1;
 
 
     protected Cell[,] cells;
@@ -76,10 +84,13 @@ public class Labyrinth2D : MonoBehaviour
 
     private void OnValidate()
     {
-        if (columns * rows > 35 * 35)
+
+
+        if (columns * rows > 35 * 35 && combineMeshes == true && !mergeCubes)
         {
-            combineMeshes = false;
-            Debug.LogError("Cannot combine meshes when labyrinth2D size is bigger than " + 35 * 35 + " .");
+            //combineMeshes = false;
+            //Debug.LogError("Cannot combine meshes when labyrinth2D size is bigger than " + 35 * 35 + " .");
+            Debug.LogWarning("Labyrinth may exceed maximum vertices count.");
         }
     }
 
@@ -179,7 +190,7 @@ public class Labyrinth2D : MonoBehaviour
                 return null;
 
 
-            avaliableDirections = new List<Direction>(){Direction.FRONT, Direction.BACK, Direction.RIGHT, Direction.LEFT};
+            avaliableDirections = new List<Direction>(){Direction.FORWARD, Direction.BACK, Direction.RIGHT, Direction.LEFT};
 
             if (currentCell.x < 1 || closedCells.Contains(cells[currentCell.x - 1, currentCell.z]))
                 avaliableDirections.Remove(Direction.LEFT);
@@ -188,7 +199,7 @@ public class Labyrinth2D : MonoBehaviour
                 avaliableDirections.Remove(Direction.RIGHT);
 
             if (currentCell.z > rows - 2 || closedCells.Contains(cells[currentCell.x, currentCell.z + 1]))
-                avaliableDirections.Remove(Direction.FRONT);
+                avaliableDirections.Remove(Direction.FORWARD);
 
             if (currentCell.z < 1 || closedCells.Contains(cells[currentCell.x, currentCell.z - 1]))
                 avaliableDirections.Remove(Direction.BACK);
@@ -206,7 +217,9 @@ public class Labyrinth2D : MonoBehaviour
 
     protected virtual void CarvePath(Cell currentCell, List<Direction> avaliableDirections)
     {
-        switch (avaliableDirections[(int)(Random.value * avaliableDirections.Count)])
+        //int r = (int) (avaliableDirections.Count * Mathf.PerlinNoise(currentCell.x / 4f, currentCell.z / 4f));
+        int r = Random.Range(0, avaliableDirections.Count);
+        switch (avaliableDirections[r])
         {
             case Direction.RIGHT://Right
                 currentCell.childCells.Push(cells[currentCell.x + 1, currentCell.z]);
@@ -218,7 +231,7 @@ public class Labyrinth2D : MonoBehaviour
                 walls.Remove(new Cell(currentCell.x * 2 + 1 - 1, currentCell.z * 2 + 1));
                 break;
 
-            case Direction.FRONT://Front
+            case Direction.FORWARD://Front
                 currentCell.childCells.Push(cells[currentCell.x, currentCell.z + 1]);
                 walls.Remove(new Cell(currentCell.x * 2 + 1, currentCell.z * 2 + 2));
                 break;
@@ -262,15 +275,46 @@ public class Labyrinth2D : MonoBehaviour
         else if(meshFilter.sharedMesh != null)
             meshFilter.sharedMesh.Clear();
 
+
+
+        if (mergeCubes)
+        {
+            for (int k = 0; k < mergeAmount; k++)
+            {
+                int i = 0;
+                while (i < gameObject.transform.childCount)
+                {
+                    //if (gameObject.transform.GetChild(i).name == gameObject.name) continue;
+
+                    int j = i + 1;
+                    while (j < gameObject.transform.childCount)
+                    {
+                        GameObject m = gameObject.transform.GetChild(i).gameObject;
+                        if (MergeCubes(ref m, gameObject.transform.GetChild(j).gameObject))
+                        {
+                            DestroyImmediate(gameObject.transform.GetChild(j).gameObject);
+                            //i--;
+                            break;
+                        }
+
+                        else j++;
+                    }
+
+                    i++;
+                }
+            }
+        }
+
+
+
         if (combineMeshes)
         {
             MeshCollider collider = gameObject.GetComponent<MeshCollider>();
             if(collider != null)
                 DestroyImmediate(collider);
-                
-            gameObject.AddComponent<MeshCollider>();
-
+            
             CombineMeshes(gameObject);
+            gameObject.AddComponent<MeshCollider>();
         }
         else
         {
@@ -279,12 +323,45 @@ public class Labyrinth2D : MonoBehaviour
             DestroyImmediate(GetComponent<MeshCollider>());
         }
 
+
         //Don't add plane to combined meshes
         surface = GameObject.CreatePrimitive(PrimitiveType.Plane);
         surface.name = "Surface";
         surface.transform.localScale = new Vector3(columns / 10f * 2, 1, rows / 10f * 2);
         surface.transform.parent = this.transform;
         surface.GetComponent<MeshRenderer>().material = surfaceMaterial;
+    }
+
+    protected bool MergeCubes(ref GameObject c1, GameObject c2)
+    {
+
+        Vector3 d = c2.transform.localPosition - c1.transform.localPosition;
+        if (d.magnitude * 2f != (c1.transform.localScale.x + c2.transform.localScale.x) &&
+            d.magnitude * 2f != (c1.transform.localScale.y + c2.transform.localScale.y) &&
+            d.magnitude * 2f != (c1.transform.localScale.z + c2.transform.localScale.z) ) return false;
+
+
+        Vector3 scale1 = c1.gameObject.transform.localScale;
+        Vector3 scale2 = c2.gameObject.transform.localScale;
+
+        if  (Mathf.Abs(d.x) * 2 == (scale1.x + scale2.x) && scale1.y == scale2.y && scale1.z == scale2.z)
+            scale1.x = c1.transform.localScale.x + c2.transform.localScale.x;
+        else if (Mathf.Abs(d.y) * 2 == (scale1.y + scale2.y) && scale1.z == scale2.z) 
+            scale1.y = c1.transform.localScale.y + c2.transform.localScale.y;
+        else if (Mathf.Abs(d.z) * 2 == (scale1.z + scale2.z) && scale1.y == scale2.y)
+            scale1.z = c1.transform.localScale.z + c2.transform.localScale.z;
+        else return false;
+
+
+        float mass1 = c1.transform.localScale.x * c1.transform.localScale.y * c1.transform.localScale.z;
+        float mass2 = c2.transform.localScale.x * c2.transform.localScale.y * c2.transform.localScale.z;
+
+
+        c1.gameObject.transform.localPosition = (c1.transform.localPosition * mass1  + c2.transform.localPosition * mass2) / (mass1 + mass2);
+        c1.gameObject.transform.localScale = scale1;
+
+        return true;
+
     }
 
     protected void CombineMeshes(GameObject gameObject)
@@ -298,24 +375,25 @@ public class Labyrinth2D : MonoBehaviour
         //transform.localScale = Vector3.one;
 
 
-        MeshFilter[] filters = gameObject.GetComponentsInChildren<MeshFilter>();
+        List<MeshFilter> meshFilters = new List<MeshFilter>(gameObject.GetComponentsInChildren<MeshFilter>());
+        CombineInstance[] combiners = new CombineInstance[meshFilters.Count];
 
-        CombineInstance[] combiners = new CombineInstance[filters.Length];
-
-        for (int i = 0; i < filters.Length; i++)
+        for (int i = 0; i < meshFilters.Count; i++)
         {
-            if (filters[i] == null) continue;
+            if (meshFilters[i] == null) continue;
+
 
             combiners[i].subMeshIndex = 0;
-            combiners[i].mesh = filters[i].sharedMesh;
-            combiners[i].transform = filters[i].transform.localToWorldMatrix;
+            combiners[i].mesh = meshFilters[i].sharedMesh;
+            combiners[i].transform = meshFilters[i].transform.localToWorldMatrix;
         }
 
         Mesh finalMesh = new Mesh();
 
         finalMesh.CombineMeshes(combiners);
-
-
+        
+ 
+        
         MeshFilter gameObjectMF = gameObject.GetComponent<MeshFilter>();
         if (gameObjectMF == null)
             gameObjectMF = gameObject.AddComponent<MeshFilter>();

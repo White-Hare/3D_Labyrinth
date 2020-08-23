@@ -10,7 +10,7 @@ public class Labyrinth3D : Labyrinth2D
     //Done
     private void OnValidate()
     {
-        if (columns * rows > 35 * 35)
+        if (columns * rows > 35 * 35 && combineMeshes == true && !mergeCubes)
         {
             combineMeshes = false;
             Debug.LogError("Cannot combine meshes when labyrinth2D size is bigger than " + 35 * 35 + " .");
@@ -77,6 +77,36 @@ public class Labyrinth3D : Labyrinth2D
         else if(meshFilter.sharedMesh != null)
             meshFilter.sharedMesh.Clear();
 
+
+        if (mergeCubes)
+        {
+            for (int k = 0; k < mergeAmount; k++)
+            {
+                int i = 0;
+                while (i < gameObject.transform.childCount)
+                {
+                    //if (gameObject.transform.GetChild(i).name == gameObject.name) continue;
+
+                    int j = i + 1;
+                    while (j < gameObject.transform.childCount)
+                    {
+                        GameObject m = gameObject.transform.GetChild(i).gameObject;
+                        if (MergeCubes(ref m, gameObject.transform.GetChild(j).gameObject))
+                        {
+                            DestroyImmediate(gameObject.transform.GetChild(j).gameObject);
+                            //i--;
+                            break;
+                        }
+
+                        else j++;
+                    }
+
+                    i++;
+                }
+            }
+        }
+
+
         if (combineMeshes)
         {
             MeshCollider collider = gameObject.GetComponent<MeshCollider>();
@@ -120,7 +150,7 @@ public class Labyrinth3D : Labyrinth2D
                 return null;
 
 
-            avaliableDirections = new List<Direction>(){Direction.FRONT, Direction.BACK, Direction.RIGHT, Direction.LEFT, Direction.UP, Direction.DOWN};
+            avaliableDirections = new List<Direction>(){Direction.FORWARD, Direction.BACK, Direction.RIGHT, Direction.LEFT, Direction.UP, Direction.DOWN};
 
             if (currentCell.x > columns - 2 || closedCells.Contains(cells[currentCell.x + 1, currentCell.y, currentCell.z]))
                 avaliableDirections.Remove(Direction.RIGHT);
@@ -129,7 +159,7 @@ public class Labyrinth3D : Labyrinth2D
                 avaliableDirections.Remove(Direction.LEFT);
 
             if (currentCell.z > rows - 2 || closedCells.Contains(cells[currentCell.x, currentCell.y, currentCell.z + 1]))
-                avaliableDirections.Remove(Direction.FRONT);
+                avaliableDirections.Remove(Direction.FORWARD);
 
             if (currentCell.z < 1 || closedCells.Contains(cells[currentCell.x, currentCell.y, currentCell.z - 1]))
                 avaliableDirections.Remove(Direction.BACK);
@@ -155,7 +185,7 @@ public class Labyrinth3D : Labyrinth2D
     //???Done???
     protected override void CarvePath(Cell currentCell, List<Direction> avaliableDirections)
     {
-        switch (avaliableDirections[(int)(Random.value * avaliableDirections.Count)])
+        switch (avaliableDirections[Random.Range(0, avaliableDirections.Count)])
         {
             case Direction.RIGHT://Right
                 currentCell.childCells.Push(cells[currentCell.x + 1, currentCell.y, currentCell.z]);
@@ -167,7 +197,7 @@ public class Labyrinth3D : Labyrinth2D
                 walls.Remove(new Cell(currentCell.x * 2 + 1 - 1, currentCell.childCells.Peek().y * 2 + 1, currentCell.z * 2 + 1));
                 break;
 
-            case Direction.FRONT://Front
+            case Direction.FORWARD://Front
                 currentCell.childCells.Push(cells[currentCell.x, currentCell.y, currentCell.z + 1]);
                 walls.Remove(new Cell(currentCell.x * 2 + 1, currentCell.childCells.Peek().y * 2 + 1, currentCell.z * 2 + 2));
                 break;
