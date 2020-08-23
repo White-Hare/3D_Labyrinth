@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -344,11 +344,11 @@ public class Labyrinth2D : MonoBehaviour
         Vector3 scale1 = c1.gameObject.transform.localScale;
         Vector3 scale2 = c2.gameObject.transform.localScale;
 
-        if  (Mathf.Abs(d.x) * 2 == (scale1.x + scale2.x) && scale1.y == scale2.y && scale1.z == scale2.z)
+        if      (Mathf.Abs(d.x) * 2 == (scale1.x + scale2.x) && scale1.y == scale2.y && scale1.z == scale2.z)
             scale1.x = c1.transform.localScale.x + c2.transform.localScale.x;
-        else if (Mathf.Abs(d.y) * 2 == (scale1.y + scale2.y) && scale1.z == scale2.z) 
+        else if (Mathf.Abs(d.y) * 2 == (scale1.y + scale2.y) && scale1.x == scale2.x && scale1.z == scale2.z) 
             scale1.y = c1.transform.localScale.y + c2.transform.localScale.y;
-        else if (Mathf.Abs(d.z) * 2 == (scale1.z + scale2.z) && scale1.y == scale2.y)
+        else if (Mathf.Abs(d.z) * 2 == (scale1.z + scale2.z) && scale1.x == scale2.x && scale1.y == scale2.y)
             scale1.z = c1.transform.localScale.z + c2.transform.localScale.z;
         else return false;
 
