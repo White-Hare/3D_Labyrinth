@@ -42,10 +42,10 @@ public class Labyrinth3D : Labyrinth2D
 
         while (closedCells.Count < cells.Length)
         {
-            List<Direction> avaliableDirections = GetAvailableDirections(ref cc, closedCells);
-            if (avaliableDirections == null) return;
+            Direction? direction = GetAvailableRandomDirection(ref cc, closedCells);
+            if (direction == null) return;
 
-            CarvePath(cc, avaliableDirections);
+            CarvePath(cc, (Direction)direction);
 
             cc = (Cell) cc.childCells.Peek();
             closedCells.Add(cc);
@@ -131,14 +131,15 @@ public class Labyrinth3D : Labyrinth2D
         for (int z = 0; z < rows * 2 + 1; z++)
             for (int y = 0; y < layers * 2 + 1; y++)
                 for (int x = 0; x < columns * 2 + 1; x++)
-                    walls.Add(new Cell(x, y, z));
+                    if(x % 2 == 0 || y % 2 == 0 || z % 2 == 0)
+                        walls.Add(new Cell(x, y, z));
 
         return walls;
 
     }
 
     //Done
-    protected override List<Direction> GetAvailableDirections(ref Cell currentCell, List<Cell> closedCells)
+    protected override Direction? GetAvailableRandomDirection(ref Cell currentCell, List<Cell> closedCells)
     {
         List<Direction> avaliableDirections;
         int i = 0;
@@ -178,13 +179,17 @@ public class Labyrinth3D : Labyrinth2D
 
         } while (avaliableDirections.Count == 0);
 
-        return avaliableDirections;
+
+        int r = (int) (avaliableDirections.Count * Mathf.PerlinNoise(currentCell.x / (float)columns * noiseFrequency, currentCell.z / (float)rows * noiseFrequency));
+        //int r = Random.Range(0, avaliableDirections.Count);
+
+        return avaliableDirections[r];
     }
 
     //???Done???
-    protected override void CarvePath(Cell currentCell, List<Direction> avaliableDirections)
+    protected override void CarvePath(Cell currentCell, Direction direction)
     {
-        switch (avaliableDirections[Random.Range(0, avaliableDirections.Count)])
+        switch (direction)
         {
             case Direction.RIGHT://Right
                 currentCell.childCells.Push(cells[currentCell.x + 1, currentCell.y, currentCell.z]);
@@ -216,8 +221,6 @@ public class Labyrinth3D : Labyrinth2D
                 walls.Remove(new Cell(currentCell.x * 2 + 1, currentCell.childCells.Peek().y * 2 + 1 + 1, currentCell.z * 2 + 1));
                 break;
         }
-
-        walls.Remove(new Cell(currentCell.childCells.Peek().x * 2 + 1, currentCell.childCells.Peek().y * 2 + 1, currentCell.childCells.Peek().z * 2 + 1));
     }
 
     //Done

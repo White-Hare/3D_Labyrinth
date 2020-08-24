@@ -58,6 +58,8 @@ public class Labyrinth2D : MonoBehaviour
     protected enum Direction { FORWARD, BACK, RIGHT, LEFT, UP, DOWN};
 
     [SerializeField] private string seed = "";
+    [SerializeField, Range(0.01f, 20f)] protected float noiseFrequency = 10f;
+    private float noiseOffset;
 
     public Material wallMaterial;
     public Material surfaceMaterial;
@@ -101,9 +103,11 @@ public class Labyrinth2D : MonoBehaviour
         
     public void Generate()//Awake
     {
-        Random.InitState(seed.GetHashCode());
+        //Random.InitState(seed.GetHashCode() & int.MaxValue);
+        noiseOffset = (float)(seed.GetHashCode() & int.MaxValue) / (float)int.MaxValue;
+        Debug.Log(noiseOffset);
 
-        Func func = () => { GenerateMaze(); GetSolution(false); };//You can delete "GetSolution()" if you want.
+        Func func = () => { GenerateMaze(); BuildMaze();GetSolution(false); };//You can delete "GetSolution()" if you want.
         TranslateMethodsToLabyrinthOrigin(func);
 
 
@@ -163,10 +167,10 @@ public class Labyrinth2D : MonoBehaviour
 
         while (closedCells.Count < cells.Length)
         {
-            List<Direction> avaliableDirections = GetAvailableDirections(ref cc, closedCells);
-            if (avaliableDirections == null) return;
+            Direction? direction = GetAvailableRandomDirection(ref cc, closedCells);
+            if (direction == null) return;
 
-            CarvePath(cc, avaliableDirections);
+            CarvePath(cc, (Direction)direction);
 
             cc = (Cell)cc.childCells.Peek();
             closedCells.Add(cc);
@@ -174,11 +178,9 @@ public class Labyrinth2D : MonoBehaviour
 
 
         endCell = closedCells.Find(a => (a.x == columns - 1 && a.z == rows - 1));
-
-        BuildMaze();
     }
 
-    protected virtual List<Direction> GetAvailableDirections(ref Cell currentCell, List<Cell> closedCells)
+    protected virtual Direction? GetAvailableRandomDirection(ref Cell currentCell, List<Cell> closedCells)
     {
         List<Direction> avaliableDirections;
         int i = 0;
@@ -211,14 +213,18 @@ public class Labyrinth2D : MonoBehaviour
 
         } while (avaliableDirections.Count == 0);
 
-        return avaliableDirections;
+
+        int r = (int) (avaliableDirections.Count * Mathf.PerlinNoise(currentCell.x / (float)columns * noiseFrequency + noiseOffset, 
+                                                                     currentCell.z / (float)rows * noiseFrequency + noiseOffset));
+        //int r = Random.Range(0, avaliableDirections.Count);
+
+        return avaliableDirections[r];
     }
 
-    protected virtual void CarvePath(Cell currentCell, List<Direction> avaliableDirections)
+    protected virtual void CarvePath(Cell currentCell, Direction direction)
     {
-        //int r = (int) (avaliableDirections.Count * Mathf.PerlinNoise(currentCell.x / 4f, currentCell.z / 4f));
-        int r = Random.Range(0, avaliableDirections.Count);
-        switch (avaliableDirections[r])
+
+        switch (direction)
         {
             case Direction.RIGHT://Right
                 currentCell.childCells.Push(cells[currentCell.x + 1, currentCell.z]);
@@ -240,8 +246,6 @@ public class Labyrinth2D : MonoBehaviour
                 walls.Remove(new Cell(currentCell.x * 2 + 1, currentCell.z * 2 - 1 + 1));
                 break;
         }
-
-        walls.Remove(new Cell(currentCell.childCells.Peek().x * 2 + 1, currentCell.childCells.Peek().z * 2 + 1));
     }
 
     protected virtual List<Cell> GenerateWalls()
@@ -249,7 +253,8 @@ public class Labyrinth2D : MonoBehaviour
         List<Cell> walls = new List<Cell>();
         for (int z = 0; z < (rows) * 2 + 1; z++)
             for (int x = 0; x < (columns) * 2 + 1; x++)
-                walls.Add(new Cell(x, z));
+                if(x % 2 == 0 || z % 2 == 0)
+                    walls.Add(new Cell(x, z));
 
         return walls;
     }
