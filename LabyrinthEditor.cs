@@ -14,9 +14,6 @@ public class LabyrinthEditor : Editor
 
         Labyrinth2D labyrinth2D = target as Labyrinth2D;
 
-        if (labyrinth2D.mergeCubes)
-            labyrinth2D.mergeAmount = EditorGUILayout.IntSlider("Merge Amount", labyrinth2D.mergeAmount, 1, 10);
-
 
         if (GUILayout.Button("Preview Labyrinth"))
         {

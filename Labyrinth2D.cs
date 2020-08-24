@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -62,14 +62,13 @@ public class Labyrinth2D : MonoBehaviour
     public Material wallMaterial;
     public Material surfaceMaterial;
 
-    [Range(2, 70)] public int columns = 10, rows = 10;
-
     [SerializeField] private bool activateNavMeshForSurface = false;//For Using Unity NavMesh
     [SerializeField] private bool showSolution = false;
     [SerializeField] protected bool combineMeshes = true;
 
-    public bool mergeCubes = true;
-    [HideInInspector] public int mergeAmount = 1;
+    [SerializeField] protected bool mergeCubes = true;
+
+    [Range(2, 70)] public int columns = 10, rows = 10;
 
 
     protected Cell[,] cells;
@@ -261,8 +260,8 @@ public class Labyrinth2D : MonoBehaviour
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.Translate(new Vector3(w.x - columns,
-                                      transform.localScale.y / 2,
-                                      w.z - rows));
+                transform.localScale.y / 2,
+                w.z - rows));
 
             cube.transform.parent = this.transform;
             cube.GetComponent<MeshRenderer>().material = wallMaterial;
@@ -272,47 +271,46 @@ public class Labyrinth2D : MonoBehaviour
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         if (meshFilter == null)
             meshFilter = gameObject.AddComponent<MeshFilter>();
-        else if(meshFilter.sharedMesh != null)
+        else if (meshFilter.sharedMesh != null)
             meshFilter.sharedMesh.Clear();
 
 
 
         if (mergeCubes)
         {
-            for (int k = 0; k < mergeAmount; k++)
+
+            int i = 0;
+            while (i < gameObject.transform.childCount)
             {
-                int i = 0;
-                while (i < gameObject.transform.childCount)
+                //if (gameObject.transform.GetChild(i).name == gameObject.name) continue;
+
+                int j = i + 1;
+                while (j < gameObject.transform.childCount)
                 {
-                    //if (gameObject.transform.GetChild(i).name == gameObject.name) continue;
-
-                    int j = i + 1;
-                    while (j < gameObject.transform.childCount)
+                    GameObject m = gameObject.transform.GetChild(i).gameObject;
+                    if (MergeCubes(ref m, gameObject.transform.GetChild(j).gameObject))
                     {
-                        GameObject m = gameObject.transform.GetChild(i).gameObject;
-                        if (MergeCubes(ref m, gameObject.transform.GetChild(j).gameObject))
-                        {
-                            DestroyImmediate(gameObject.transform.GetChild(j).gameObject);
-                            //i--;
-                            break;
-                        }
-
-                        else j++;
+                        DestroyImmediate(gameObject.transform.GetChild(j).gameObject);
+                        //i--;
+                        //break;
                     }
 
-                    i++;
+                    else j++;
                 }
+
+                i++;
             }
         }
+
 
 
 
         if (combineMeshes)
         {
             MeshCollider collider = gameObject.GetComponent<MeshCollider>();
-            if(collider != null)
+            if (collider != null)
                 DestroyImmediate(collider);
-            
+
             CombineMeshes(gameObject);
             gameObject.AddComponent<MeshCollider>();
         }

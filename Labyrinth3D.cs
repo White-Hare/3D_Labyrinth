@@ -80,31 +80,30 @@ public class Labyrinth3D : Labyrinth2D
 
         if (mergeCubes)
         {
-            for (int k = 0; k < mergeAmount; k++)
+
+            int i = 0;
+            while (i < gameObject.transform.childCount)
             {
-                int i = 0;
-                while (i < gameObject.transform.childCount)
+                //if (gameObject.transform.GetChild(i).name == gameObject.name) continue;
+
+                int j = i + 1;
+                while (j < gameObject.transform.childCount)
                 {
-                    //if (gameObject.transform.GetChild(i).name == gameObject.name) continue;
-
-                    int j = i + 1;
-                    while (j < gameObject.transform.childCount)
+                    GameObject m = gameObject.transform.GetChild(i).gameObject;
+                    if (MergeCubes(ref m, gameObject.transform.GetChild(j).gameObject))
                     {
-                        GameObject m = gameObject.transform.GetChild(i).gameObject;
-                        if (MergeCubes(ref m, gameObject.transform.GetChild(j).gameObject))
-                        {
-                            DestroyImmediate(gameObject.transform.GetChild(j).gameObject);
-                            //i--;
-                            break;
-                        }
-
-                        else j++;
+                        DestroyImmediate(gameObject.transform.GetChild(j).gameObject);
+                        //i--;
+                        //break;
                     }
 
-                    i++;
+                    else j++;
                 }
+
+                i++;
             }
         }
+        
 
 
         if (combineMeshes)
