@@ -59,7 +59,7 @@ public class Labyrinth2D : MonoBehaviour
 
     [SerializeField] private string seed = "";
     [SerializeField, Range(0.01f, 20f)] protected float noiseFrequency = 10f;
-    private float noiseOffset;
+    protected float noiseOffset = 0;
 
     public Material wallMaterial;
     public Material surfaceMaterial;
@@ -105,7 +105,6 @@ public class Labyrinth2D : MonoBehaviour
     {
         //Random.InitState(seed.GetHashCode() & int.MaxValue);
         noiseOffset = (float)(seed.GetHashCode() & int.MaxValue) / (float)int.MaxValue;
-        Debug.Log(noiseOffset);
 
         Func func = () => { GenerateMaze(); BuildMaze();GetSolution(false); };//You can delete "GetSolution()" if you want.
         TranslateMethodsToLabyrinthOrigin(func);
@@ -215,7 +214,7 @@ public class Labyrinth2D : MonoBehaviour
 
 
         int r = (int) (avaliableDirections.Count * Mathf.PerlinNoise(currentCell.x / (float)columns * noiseFrequency + noiseOffset, 
-                                                                     currentCell.z / (float)rows * noiseFrequency + noiseOffset));
+            currentCell.z / (float)rows  * noiseFrequency + noiseOffset));
         //int r = Random.Range(0, avaliableDirections.Count);
 
         return avaliableDirections[r];

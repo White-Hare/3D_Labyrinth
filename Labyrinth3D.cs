@@ -180,7 +180,8 @@ public class Labyrinth3D : Labyrinth2D
         } while (avaliableDirections.Count == 0);
 
 
-        int r = (int) (avaliableDirections.Count * Mathf.PerlinNoise(currentCell.x / (float)columns * noiseFrequency, currentCell.z / (float)rows * noiseFrequency));
+        int r = (int) (avaliableDirections.Count * Mathf.PerlinNoise(currentCell.x / (float)columns * noiseFrequency + noiseOffset, 
+            currentCell.z / (float)rows  * noiseFrequency + noiseOffset));
         //int r = Random.Range(0, avaliableDirections.Count);
 
         return avaliableDirections[r];
