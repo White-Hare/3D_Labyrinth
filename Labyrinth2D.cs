@@ -57,21 +57,21 @@ public class Labyrinth2D : MonoBehaviour
     }
     protected enum Direction { FORWARD, BACK, RIGHT, LEFT, UP, DOWN};
 
-    [SerializeField] private string seed = "";
-    [SerializeField, Range(0.01f, 20f)] protected float noiseFrequency = 10f;
-    protected float noiseOffset = 0;
-
     public Material wallMaterial;
     public Material surfaceMaterial;
 
     [SerializeField] private bool activateNavMeshForSurface = false;//For Using Unity NavMesh
-    [SerializeField] private bool showSolution = false;
+    [SerializeField] protected bool showSolution = false;
     [SerializeField] protected bool combineMeshes = true;
 
     [SerializeField] protected bool mergeCubes = true;
 
-    [Range(2, 70)] public int columns = 10, rows = 10;
+    
+    [SerializeField] private string seed = "";
+    [SerializeField, Range(0.01f, 20f)] protected float noiseFrequency = 10f;
+    protected float noiseOffset = 0;
 
+    [Range(2, 70)] public int columns = 10, rows = 10;
 
     protected Cell[,] cells;
     protected List<Cell> walls;
@@ -104,9 +104,9 @@ public class Labyrinth2D : MonoBehaviour
     public void Generate()//Awake
     {
         //Random.InitState(seed.GetHashCode() & int.MaxValue);
-        noiseOffset = (float)(seed.GetHashCode() & int.MaxValue) / (float)int.MaxValue;
+        noiseOffset = (float)(seed.GetHashCode() & int.MaxValue) / (int.MaxValue * 2f);
 
-        Func func = () => { GenerateMaze(); BuildMaze();GetSolution(false); };//You can delete "GetSolution()" if you want.
+        Func func = () => { GenerateMaze(); BuildMaze();};//You can delete "GetSolution()" if you want.
         TranslateMethodsToLabyrinthOrigin(func);
 
 
@@ -159,14 +159,13 @@ public class Labyrinth2D : MonoBehaviour
 
 
         walls.Remove(new Cell(cc.x * 2 + 1, cc.z * 2)); //Beginning
-        walls.Remove(new Cell(cc.x * 2 + 1, cc.z * 2 + 1));
         walls.RemoveAt(walls.Count - 2);//End + 1
 
         closedCells.Add(cc);
 
         while (closedCells.Count < cells.Length)
         {
-            Direction? direction = GetAvailableRandomDirection(ref cc, closedCells);
+            Direction? direction = GetRandomDirection(ref cc, closedCells);
             if (direction == null) return;
 
             CarvePath(cc, (Direction)direction);
@@ -179,7 +178,7 @@ public class Labyrinth2D : MonoBehaviour
         endCell = closedCells.Find(a => (a.x == columns - 1 && a.z == rows - 1));
     }
 
-    protected virtual Direction? GetAvailableRandomDirection(ref Cell currentCell, List<Cell> closedCells)
+    protected virtual Direction? GetRandomDirection(ref Cell currentCell, List<Cell> closedCells)
     {
         List<Direction> avaliableDirections;
         int i = 0;
@@ -442,10 +441,8 @@ public class Labyrinth2D : MonoBehaviour
                 GameObject sphere = null;
 
 
-                foreach (Cell s in solutionArray)
+                foreach (Cell s in this.solutionArray)
                 {
-
-
                     sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
                     sphere.transform.parent = parent;
@@ -517,10 +514,11 @@ public class Labyrinth2D : MonoBehaviour
         {
             cc = solution.Pop();
             solutionArray[solutionArray.Length - i++] = cc;
-
-
-            ShowSolution();
         }
+
+        if(showSolution)
+            ShowSolution();
+
 
         //CombineMeshes(parent.gameObject);
         return solutionArray;

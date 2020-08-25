@@ -35,14 +35,13 @@ public class Labyrinth3D : Labyrinth2D
 
 
         walls.Remove(new Cell(1, 0, 1));//Beginning
-        walls.Remove(new Cell(1, 1, 1));//Beginning
         walls.Remove(new Cell(columns* 2 - 1, layers * 2, rows * 2 - 1));; //End
 
         closedCells.Add(cc);
 
         while (closedCells.Count < cells.Length)
         {
-            Direction? direction = GetAvailableRandomDirection(ref cc, closedCells);
+            Direction? direction = GetRandomDirection(ref cc, closedCells);
             if (direction == null) return;
 
             CarvePath(cc, (Direction)direction);
@@ -139,7 +138,7 @@ public class Labyrinth3D : Labyrinth2D
     }
 
     //Done
-    protected override Direction? GetAvailableRandomDirection(ref Cell currentCell, List<Cell> closedCells)
+    protected override Direction? GetRandomDirection(ref Cell currentCell, List<Cell> closedCells)
     {
         List<Direction> avaliableDirections;
         int i = 0;
