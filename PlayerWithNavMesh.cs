@@ -6,7 +6,7 @@ using UnityEngine.AI;
 
 public class PlayerWithNavMesh : MonoBehaviour
 {
-    [SerializeField] private  Labyrinth2D labyrinth;
+    [SerializeField] private Labyrinth2D labyrinth = null;
     private UnityEngine.AI.NavMeshAgent agent;
 
     

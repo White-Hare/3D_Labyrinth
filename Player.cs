@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] private Labyrinth2D labyrinth;
+    [SerializeField] private Labyrinth2D labyrinth = null;
     public float speed = 10f;
 
     private Labyrinth2D.Cell[] solution;

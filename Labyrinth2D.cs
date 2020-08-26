@@ -376,17 +376,19 @@ public class Labyrinth2D : MonoBehaviour
         //transform.localScale = Vector3.one;
 
 
+        //First MeshFilter in childs in parents. Don't include it.
         List<MeshFilter> meshFilters = new List<MeshFilter>(gameObject.GetComponentsInChildren<MeshFilter>());
-        CombineInstance[] combiners = new CombineInstance[meshFilters.Count];
+        CombineInstance[] combiners = new CombineInstance[meshFilters.Count - 1];
 
-        for (int i = 0; i < meshFilters.Count; i++)
+        
+        for (int i = 0; i < combiners.Length; i++)
         {
-            if (meshFilters[i] == null) continue;
+            if (meshFilters[i + 1].sharedMesh == null) continue;
 
 
             combiners[i].subMeshIndex = 0;
-            combiners[i].mesh = meshFilters[i].sharedMesh;
-            combiners[i].transform = meshFilters[i].transform.localToWorldMatrix;
+            combiners[i].mesh = meshFilters[i + 1].sharedMesh;
+            combiners[i].transform = meshFilters[i + 1].transform.localToWorldMatrix;
         }
 
         Mesh finalMesh = new Mesh();
@@ -439,7 +441,8 @@ public class Labyrinth2D : MonoBehaviour
             if (showSolution)
             {
                 GameObject sphere = null;
-
+                Material red = new Material(Shader.Find("Standard"));
+                red.color = Color.red;
 
                 foreach (Cell s in this.solutionArray)
                 {
@@ -450,10 +453,12 @@ public class Labyrinth2D : MonoBehaviour
                     sphere.transform.localPosition = ToLabyrinthSpace(s, sphere.transform.localScale.y);
 
                     sphere.GetComponent<Collider>().isTrigger = true;
-
+                    sphere.GetComponent<MeshRenderer>().sharedMaterial = red;
                 }
 
-                sphere.GetComponent<MeshRenderer>().sharedMaterial.color = Color.red;
+
+
+
             }
         }
 

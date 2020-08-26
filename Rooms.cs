@@ -5,40 +5,63 @@ using UnityEngine;
 
 public class Rooms : Labyrinth2D
 {
+    [SerializeField] private int numberOfRooms = 3;
+    private Transform solution;
+
     protected override void GenerateMaze()
     {
         base.GenerateMaze();
-        showSolution = false; //For Safety
 
+
+        int roomFrequency = rows * columns / numberOfRooms;
+          
 
         Stack<List<Cell>> rooms = new Stack<List<Cell>>();
 
 
-        void CreateRoom(Cell currentCell)
+        Color[] colors = new Color[]{Color.black, Color.cyan, Color.blue, Color.red, Color.magenta, Color.yellow};
+        Color color = colors[0];
+
+        if (showSolution)
+            solution = new GameObject("Solution").transform;
+
+        int i = 0;
+        void CreateRoom(Cell currentCell, List<Cell> room = null)
         {
-            List<Cell> room = new List<Cell>();
-            rooms.Push(room);
-
-
             while (currentCell != null)
             {
+                if (i++ % roomFrequency == 0)
+                { 
+                    room = new List<Cell>();
+                    rooms.Push(room);
+                }
+
+
                 room.Add(currentCell);
 
                 if (currentCell.childCells.Count > 1)
                     while (currentCell.childCells.Count > 0)
-                        CreateRoom(currentCell.childCells.Pop());
+                        CreateRoom(currentCell.childCells.Pop(), room);
 
                 if (currentCell.childCells.Count == 0)
                     break;
-                else
-                    currentCell = currentCell.childCells.Pop();
+
+                if (showSolution)
+                {
+                    GameObject s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    s.transform.parent = solution;
+                    s.transform.position = ToLabyrinthSpace(currentCell, s.transform.lossyScale.y);
+                    s.GetComponent<MeshRenderer>().sharedMaterial = new Material(Shader.Find("Standard"));
+                    s.GetComponent<MeshRenderer>().sharedMaterial.color = colors[rooms.Count % colors.Length];
+                }
+
+
+                currentCell = currentCell.childCells.Pop();
             }
         }
 
         CreateRoom(beginCell);
-
-        Debug.Log(rooms.Count);
-
+        
 
         //Create Room
         void Carve(List<Cell> room, Cell cell, int xOffset = 0, int yOffset = 0)
@@ -80,5 +103,9 @@ public class Rooms : Labyrinth2D
             if (c.x < columns - 1 && c.z < rows - 1 && !IsSide(room, new Cell((c.x + 1) * 2, (c.z + 1) * 2)))
                 Carve(room, cells[c.x + 1, c.z + 1]);
         }
+
+
+
+        showSolution = false; //For Safety
     }
 }
