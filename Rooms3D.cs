@@ -135,22 +135,22 @@ public class Rooms3D : Labyrinth3D
                     Carve(room, cells[c.x + x, c.y + y, c.z + z]);
             }
 
+          
             //Sides
-            if(xm && ym && room.Contains(new Cell(c.x - 1, c.y - 1, c.z))) CarveSides(room, c, 0, 0, 1);
-            if(zm && ym && room.Contains(new Cell(c.x, c.y - 1, c.z - 1))) CarveSides(room, c, 1, 0, 0);
-            if(xp && ym && room.Contains(new Cell(c.x + 1, c.y - 1, c.z))) CarveSides(room, c, 2, 0, 1);
-            if(zp && ym && room.Contains(new Cell(c.x, c.y - 1, c.z + 1))) CarveSides(room, c, 1, 0, 2);
+            if(xm && ym) CarveSides(room, c, 0, 0, 1);
+            if(zm && ym) CarveSides(room, c, 1, 0, 0);
+            if(xp && ym) CarveSides(room, c, 2, 0, 1);
+            if(zp && ym) CarveSides(room, c, 1, 0, 2);
 
-            if(xm && yp && room.Contains(new Cell(c.x - 1, c.y + 1, c.z))) CarveSides(room, c, 0, 2, 1);
-            if(zm && yp && room.Contains(new Cell(c.x, c.y + 1, c.z - 1))) CarveSides(room, c, 1, 2, 0);
-            if(xp && yp && room.Contains(new Cell(c.x + 1, c.y + 1, c.z))) CarveSides(room, c, 2, 2, 1);
-            if(zp && yp && room.Contains(new Cell(c.x, c.y + 1, c.z + 1))) CarveSides(room, c, 1, 2, 2);
+            if(xm && yp) CarveSides(room, c, 0, 2, 1);
+            if(zm && yp) CarveSides(room, c, 1, 2, 0);
+            if(xp && yp) CarveSides(room, c, 2, 2, 1);
+            if(zp && yp) CarveSides(room, c, 1, 2, 2);
 
-            if(xm && zm && room.Contains(new Cell(c.x - 1, c.y, c.z - 1))) CarveSides(room, c, 0, 1, 0);
-            if(xp && zm && room.Contains(new Cell(c.x + 1, c.y, c.z - 1))) CarveSides(room, c, 2, 1, 0);
-            if(xm && zp && room.Contains(new Cell(c.x - 1, c.y, c.z + 1))) CarveSides(room, c, 0, 1, 2);
-            if(xp && zp && room.Contains(new Cell(c.x + 1, c.y, c.z + 1))) CarveSides(room, c, 2, 1, 2);
-
+            if(xm && zm) CarveSides(room, c, 0, 1, 0);
+            if(xp && zm) CarveSides(room, c, 2, 1, 0);
+            if(xm && zp) CarveSides(room, c, 0, 1, 2);
+            if(xp && zp) CarveSides(room, c, 2, 1, 2);
         }
 
 
