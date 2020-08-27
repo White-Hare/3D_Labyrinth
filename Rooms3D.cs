@@ -153,7 +153,7 @@ public class Rooms3D : Labyrinth3D
             if(xp && zp) CarveSides(room, c, 2, 1, 2);
         }
 
-      }
+      
 
 
         showSolution = false; //For Safety
